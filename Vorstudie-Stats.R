@@ -174,13 +174,16 @@ anova_anthro <- function(data){
                  values_to = "AnthroMean")
   
   anova_result <- aov(AnthroMean ~ Condition, data = data_long)
-  # summary(anova_result)
+  summary(anova_result)
   
   summary_stats <- data_long %>%
     group_by(Condition) %>%
     summarize(Mean = mean(AnthroMean), SD = sd(AnthroMean))
   
   print(summary_stats)
+  
+  tukey_result <- TukeyHSD(anova_result)
+  print(tukey_result)
   
   max_condition <- summary_stats %>%
     filter(Mean == max(Mean)) %>%
@@ -213,10 +216,10 @@ anova_anima <- function(data) {
                  values_to = "AnimaMean")
   
   anova_result <- aov(AnimaMean ~ Condition, data = data_long)
-  # summary(anova_result)
+  summary(anova_result)
   
   tukey_result <- TukeyHSD(anova_result)
-  # print(tukey_result)
+  print(tukey_result)
 
   summary_stats <- data_long %>%
     group_by(Condition) %>%
@@ -258,7 +261,7 @@ anova_like <- function(data) {
   print(summary(anova_result))
   
   tukey_result <- TukeyHSD(anova_result)
-  # print(tukey_result)
+  print(tukey_result)
   
   summary_stats <- data_long %>%
     group_by(Condition) %>%
@@ -300,7 +303,7 @@ anova_int <- function(data) {
                  values_to = "IntMean")
   
   anova_result <- aov(IntMean ~ Condition, data = data_long)
-  # summary(anova_result)
+  summary(anova_result)
   
   tukey_result <- TukeyHSD(anova_result)
   print(tukey_result)
@@ -324,7 +327,7 @@ anova_int <- function(data) {
 }
 
 anova_int(data)
-t.test(data$`hyperRealistic[IntMean]`, data$`panda[IntMean]`)
+t.test(data$`hyperRealistic[IntMean]`, data$`toonBrown[IntMean]`)
 
 # ----- Safety anova -----
 columns <- data[, c("toonBlue[SafeMean]", "toonBrown[SafeMean]", "hyperRealistic[SafeMean]",
@@ -346,7 +349,7 @@ anova_safe <- function(data) {
   summary(anova_result)
   
   tukey_result <- TukeyHSD(anova_result)
-  # print(tukey_result)
+  print(tukey_result)
   
   summary_stats <- data_long %>%
     group_by(Condition) %>%
