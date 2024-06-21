@@ -1,14 +1,14 @@
-# install.packages("ggplot2")
-# library("ggplot2") 
-
+install.packages("ggplot2")
 install.packages("readxl")
-library("readxl")
-
 install.packages("psych")
-library(psych)
-
 install.packages("dplyr")
+
+library("ggplot2") 
+library("readxl")
+library(psych)
 library(dplyr)
+library(tidyr)
+
 
 # Setup
 data <- read_excel("Vorstudie-Data/results.xlsx")
@@ -76,100 +76,304 @@ return(data)
 
 data <- clean_data(data)
 
-calc_anthro_means <- function(data) {
-
-anthro_toonBlue <<- (mean(data$`toonBlue[Anthro1]`) +
-                      mean(data$`toonBlue[Anthro2]`) +
-                      mean(data$`toonBlue[Anthro3]`) +
-                      mean(data$`toonBlue[Anthro4]`) +
-                      mean(data$`toonBlue[Anthro5]`)) / 5
-
-anthro_hyperRealistic <<- (mean(data$`hyperRealistic[Anthro1]`) +
-                   mean(data$`hyperRealistic[Anthro2]`)+ 
-                   mean(data$`hyperRealistic[Anthro3]`)+ 
-                   mean(data$`hyperRealistic[Anthro4]`) +
-                   mean(data$`hyperRealistic[Anthro5]`)) / 5
-
-anthro_panda <<- (mean(data$`panda[Anthro1]`) +
-                   mean(data$`panda[Anthro2]`)+ 
-                   mean(data$`panda[Anthro3]`)+ 
-                   mean(data$`panda[Anthro4]`) +
-                   mean(data$`panda[Anthro5]`)) / 5
-
-anthro_realisticWeird <<- (mean(data$`realisticWeird[Anthro1]`) +
-                   mean(data$`realisticWeird[Anthro2]`)+ 
-                   mean(data$`realisticWeird[Anthro3]`)+ 
-                   mean(data$`realisticWeird[Anthro4]`) +
-                   mean(data$`realisticWeird[Anthro5]`)) / 5
-
-anthro_toonBrown <<- (mean(data$`toonBrown[Anthro1]`) +
-                            mean(data$`toonBrown[Anthro2]`)+ 
-                            mean(data$`toonBrown[Anthro3]`)+ 
-                            mean(data$`toonBrown[Anthro4]`) +
-                            mean(data$`toonBrown[Anthro5]`)) / 5
-return(data)
-}
-
-calc_anima_means <- function(data) {
-  anima_toonBlue <<- (mean(data$`toonBlue[Anima1]`) +
-                         mean(data$`toonBlue[Anima2]`) +
-                         mean(data$`toonBlue[Anima3]`) +
-                         mean(data$`toonBlue[Anima4]`) +
-                         mean(data$`toonBlue[Anima5]`) +
-                        mean(data$`toonBlue[Anima6]`)) / 6
+# function adds mean of 5 godspeed variables
+add_mean_columns <- function(data) {
+  data <- data %>%
+    mutate(`toonBrown[AnthroMean]` = rowMeans(select(., `toonBrown[Anthro1]`, `toonBrown[Anthro2]`, `toonBrown[Anthro3]`, `toonBrown[Anthro4]`, `toonBrown[Anthro5]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[AnimaMean]` = rowMeans(select(., `toonBrown[Anima1]`, `toonBrown[Anima2]`, `toonBrown[Anima3]`, `toonBrown[Anima4]`, `toonBrown[Anima5]`, `toonBrown[Anima6]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[LikeMean]` = rowMeans(select(., `toonBrown[Like1]`, `toonBrown[Like2]`, `toonBrown[Like3]`, `toonBrown[Like4]`, `toonBrown[Like5]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[IntMean]` = rowMeans(select(., `toonBrown[Int1]`, `toonBrown[Int2]`, `toonBrown[Int3]`, `toonBrown[Int4]`, `toonBrown[Int5]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[SafeMean]` = rowMeans(select(., `toonBrown[Safe1]`, `toonBrown[Safe2]`, `toonBrown[Safe3]`), na.rm = TRUE)) %>%
+    relocate(`toonBrown[AnthroMean]`, .after = `toonBrown[Anthro5]`) %>%  
+    relocate(`toonBrown[AnimaMean]`, .after = `toonBrown[Anima6]`) %>%
+    relocate(`toonBrown[LikeMean]`, .after = `toonBrown[Like5]`) %>%
+    relocate(`toonBrown[IntMean]`, .after = `toonBrown[Int5]`) %>%
+    relocate(`toonBrown[SafeMean]`, .after = `toonBrown[Safe3]`)
   
-  anima_hyperRealistic <<- (mean(data$`hyperRealistic[Anima1]`) +
-                               mean(data$`hyperRealistic[Anima2]`)+ 
-                               mean(data$`hyperRealistic[Anima3]`)+ 
-                               mean(data$`hyperRealistic[Anima4]`) +
-                               mean(data$`hyperRealistic[Anima5]`) +
-                              mean(data$`hyperRealistic[Anima6]`)) / 6
+  data <- data %>%
+    mutate(`toonBlue[AnthroMean]` = rowMeans(select(., `toonBlue[Anthro1]`, `toonBlue[Anthro2]`, `toonBlue[Anthro3]`, `toonBlue[Anthro4]`, `toonBlue[Anthro5]`), na.rm = TRUE)) %>%
+    mutate(`toonBlue[AnimaMean]` = rowMeans(select(., `toonBlue[Anima1]`, `toonBlue[Anima2]`, `toonBlue[Anima3]`, `toonBlue[Anima4]`, `toonBlue[Anima5]`, `toonBlue[Anima6]`), na.rm = TRUE)) %>%
+    mutate(`toonBlue[LikeMean]` = rowMeans(select(., `toonBlue[Like1]`, `toonBlue[Like2]`, `toonBlue[Like3]`, `toonBlue[Like4]`, `toonBlue[Like5]`), na.rm = TRUE)) %>%
+    mutate(`toonBlue[IntMean]` = rowMeans(select(., `toonBlue[Int1]`, `toonBlue[Int2]`, `toonBlue[Int3]`, `toonBlue[Int4]`, `toonBlue[Int5]`), na.rm = TRUE)) %>%
+    mutate(`toonBlue[SafeMean]` = rowMeans(select(., `toonBlue[Safe1]`, `toonBlue[Safe2]`, `toonBlue[Safe3]`), na.rm = TRUE)) %>%
+    relocate(`toonBlue[AnthroMean]`, .after = `toonBlue[Anthro5]`) %>%  
+    relocate(`toonBlue[AnimaMean]`, .after = `toonBlue[Anima6]`) %>%
+    relocate(`toonBlue[LikeMean]`, .after = `toonBlue[Like5]`) %>%
+    relocate(`toonBlue[IntMean]`, .after = `toonBlue[Int5]`) %>%
+    relocate(`toonBlue[SafeMean]`, .after = `toonBlue[Safe3]`)
   
-  anima_panda <<- (mean(data$`panda[Anima1]`) +
-                      mean(data$`panda[Anima2]`)+ 
-                      mean(data$`panda[Anima3]`)+ 
-                      mean(data$`panda[Anima4]`) +
-                      mean(data$`panda[Anima5]`) +
-                     mean(data$`panda[Anima6]`)) / 6
+  data <- data %>%
+    mutate(`hyperRealistic[AnthroMean]` = rowMeans(select(., `hyperRealistic[Anthro1]`, `hyperRealistic[Anthro2]`, `hyperRealistic[Anthro3]`, `hyperRealistic[Anthro4]`, `hyperRealistic[Anthro5]`), na.rm = TRUE)) %>%
+    mutate(`hyperRealistic[AnimaMean]` = rowMeans(select(., `hyperRealistic[Anima1]`, `hyperRealistic[Anima2]`, `hyperRealistic[Anima3]`, `hyperRealistic[Anima4]`, `hyperRealistic[Anima5]`, `hyperRealistic[Anima6]`), na.rm = TRUE)) %>%
+    mutate(`hyperRealistic[LikeMean]` = rowMeans(select(., `hyperRealistic[Like1]`, `hyperRealistic[Like2]`, `hyperRealistic[Like3]`, `hyperRealistic[Like4]`, `hyperRealistic[Like5]`), na.rm = TRUE)) %>%
+    mutate(`hyperRealistic[IntMean]` = rowMeans(select(., `hyperRealistic[Int1]`, `hyperRealistic[Int2]`, `hyperRealistic[Int3]`, `hyperRealistic[Int4]`, `hyperRealistic[Int5]`), na.rm = TRUE)) %>%
+    mutate(`hyperRealistic[SafeMean]` = rowMeans(select(., `hyperRealistic[Safe1]`, `hyperRealistic[Safe2]`, `hyperRealistic[Safe3]`), na.rm = TRUE)) %>%
+    relocate(`hyperRealistic[AnthroMean]`, .after = `hyperRealistic[Anthro5]`) %>%  
+    relocate(`hyperRealistic[AnimaMean]`, .after = `hyperRealistic[Anima6]`) %>%
+    relocate(`hyperRealistic[LikeMean]`, .after = `hyperRealistic[Like5]`) %>%
+    relocate(`hyperRealistic[IntMean]`, .after = `hyperRealistic[Int5]`) %>%
+    relocate(`hyperRealistic[SafeMean]`, .after = `hyperRealistic[Safe3]`)
   
-  anima_realisticWeird <<- (mean(data$`realisticWeird[Anima1]`) +
-                               mean(data$`realisticWeird[Anima2]`)+ 
-                               mean(data$`realisticWeird[Anima3]`)+ 
-                               mean(data$`realisticWeird[Anima4]`) +
-                               mean(data$`realisticWeird[Anima5]`) +
-                              mean(data$`realisticWeird[Anima6]`)) / 6
+  data <- data %>%
+    mutate(`realisticWeird[AnthroMean]` = rowMeans(select(., `realisticWeird[Anthro1]`, `realisticWeird[Anthro2]`, `realisticWeird[Anthro3]`, `realisticWeird[Anthro4]`, `realisticWeird[Anthro5]`), na.rm = TRUE)) %>%
+    mutate(`realisticWeird[AnimaMean]` = rowMeans(select(., `realisticWeird[Anima1]`, `realisticWeird[Anima2]`, `realisticWeird[Anima3]`, `realisticWeird[Anima4]`, `realisticWeird[Anima5]`, `realisticWeird[Anima6]`), na.rm = TRUE)) %>%
+    mutate(`realisticWeird[LikeMean]` = rowMeans(select(., `realisticWeird[Like1]`, `realisticWeird[Like2]`, `realisticWeird[Like3]`, `realisticWeird[Like4]`, `realisticWeird[Like5]`), na.rm = TRUE)) %>%
+    mutate(`realisticWeird[IntMean]` = rowMeans(select(., `realisticWeird[Int1]`, `realisticWeird[Int2]`, `realisticWeird[Int3]`, `realisticWeird[Int4]`, `realisticWeird[Int5]`), na.rm = TRUE)) %>%
+    mutate(`realisticWeird[SafeMean]` = rowMeans(select(., `realisticWeird[Safe1]`, `realisticWeird[Safe2]`, `realisticWeird[Safe3]`), na.rm = TRUE)) %>%
+    relocate(`realisticWeird[AnthroMean]`, .after = `realisticWeird[Anthro5]`) %>%  
+    relocate(`realisticWeird[AnimaMean]`, .after = `realisticWeird[Anima6]`) %>%
+    relocate(`realisticWeird[LikeMean]`, .after = `realisticWeird[Like5]`) %>%
+    relocate(`realisticWeird[IntMean]`, .after = `realisticWeird[Int5]`) %>%
+    relocate(`realisticWeird[SafeMean]`, .after = `realisticWeird[Safe3]`)
   
-  anima_toonBrown <<- (mean(data$`toonBrown[Anima1]`) +
-                          mean(data$`toonBrown[Anima2]`)+ 
-                          mean(data$`toonBrown[Anima3]`)+ 
-                          mean(data$`toonBrown[Anima4]`) +
-                          mean(data$`toonBrown[Anima5]`) +
-                         mean(data$`toonBrown[Anima6]`)) / 6
+  data <- data %>%
+    mutate(`panda[AnthroMean]` = rowMeans(select(., `panda[Anthro1]`, `panda[Anthro2]`, `panda[Anthro3]`, `panda[Anthro4]`, `panda[Anthro5]`), na.rm = TRUE)) %>%
+    mutate(`panda[AnimaMean]` = rowMeans(select(., `panda[Anima1]`, `panda[Anima2]`, `panda[Anima3]`, `panda[Anima4]`, `panda[Anima5]`, `panda[Anima6]`), na.rm = TRUE)) %>%
+    mutate(`panda[LikeMean]` = rowMeans(select(., `panda[Like1]`, `panda[Like2]`, `panda[Like3]`, `panda[Like4]`, `panda[Like5]`), na.rm = TRUE)) %>%
+    mutate(`panda[IntMean]` = rowMeans(select(., `panda[Int1]`, `panda[Int2]`, `panda[Int3]`, `panda[Int4]`, `panda[Int5]`), na.rm = TRUE)) %>%
+    mutate(`panda[SafeMean]` = rowMeans(select(., `panda[Safe1]`, `panda[Safe2]`, `panda[Safe3]`), na.rm = TRUE)) %>%
+    relocate(`panda[AnthroMean]`, .after = `panda[Anthro5]`) %>%  
+    relocate(`panda[AnimaMean]`, .after = `panda[Anima6]`) %>%
+    relocate(`panda[LikeMean]`, .after = `panda[Like5]`) %>%
+    relocate(`panda[IntMean]`, .after = `panda[Int5]`) %>%
+    relocate(`panda[SafeMean]`, .after = `panda[Safe3]`)
+  
+  # calculate godspeed mean
+  data <- data %>%
+    mutate(`toonBrown[AnthroMean]` = rowMeans(select(., `toonBrown[Anthro1]`, `toonBrown[Anthro2]`, `toonBrown[Anthro3]`, `toonBrown[Anthro4]`, `toonBrown[Anthro5]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[AnimaMean]` = rowMeans(select(., `toonBrown[Anima1]`, `toonBrown[Anima2]`, `toonBrown[Anima3]`, `toonBrown[Anima4]`, `toonBrown[Anima5]`, `toonBrown[Anima6]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[LikeMean]` = rowMeans(select(., `toonBrown[Like1]`, `toonBrown[Like2]`, `toonBrown[Like3]`, `toonBrown[Like4]`, `toonBrown[Like5]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[IntMean]` = rowMeans(select(., `toonBrown[Int1]`, `toonBrown[Int2]`, `toonBrown[Int3]`, `toonBrown[Int4]`, `toonBrown[Int5]`), na.rm = TRUE)) %>%
+    mutate(`toonBrown[SafeMean]` = rowMeans(select(., `toonBrown[Safe1]`, `toonBrown[Safe2]`, `toonBrown[Safe3]`), na.rm = TRUE)) %>%
+    relocate(`toonBrown[AnthroMean]`, .after = `toonBrown[Anthro5]`) %>%  
+    relocate(`toonBrown[AnimaMean]`, .after = `toonBrown[Anima6]`) %>%
+    relocate(`toonBrown[LikeMean]`, .after = `toonBrown[Like5]`) %>%
+    relocate(`toonBrown[IntMean]`, .after = `toonBrown[Int5]`) %>%
+    relocate(`toonBrown[SafeMean]`, .after = `toonBrown[Safe3]`)
   
   return(data)
 }
+data <- add_mean_columns(data)
 
-data <- calc_anthro_means(data)
-data <- calc_anima_means(data)
+# ---------------- statistical tests ----------------
+# normality checks, shapiro: if p > 0.05, it is normally distributed
+columns <- data[, c("toonBlue[AnthroMean]", "toonBrown[AnthroMean]", "hyperRealistic[AnthroMean]",
+                    "realisticWeird[AnthroMean]", "panda[AnthroMean]")]
+shapiro_anthro <- lapply(columns, shapiro.test)
+print(shapiro_anthro)
 
-# create column variable
-toonBlue_Anthropomorphism <- rowMeans(data[, c("toonBlue[Anthro1]", 
-                                                  "toonBlue[Anthro2]",
-                                                  "toonBlue[Anthro3]",
-                                                  "toonBlue[Anthro4]", 
-                                                  "toonBlue[Anthro5]")], na.rm = TRUE) / 5
+anova_anthro <- function(data){
+  data_selected <- data %>%
+    select(`toonBlue[AnthroMean]`, `toonBrown[AnthroMean]`, `hyperRealistic[AnthroMean]`,
+           `realisticWeird[AnthroMean]`, `panda[AnthroMean]`)
+  
+  # convertion to long format for anova
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "AnthroMean")
+  
+  anova_result <- aov(AnthroMean ~ Condition, data = data_long)
+  # summary(anova_result)
+  
+  summary_stats <- data_long %>%
+    group_by(Condition) %>%
+    summarize(Mean = mean(AnthroMean), SD = sd(AnthroMean))
+  
+  print(summary_stats)
+  
+  max_condition <- summary_stats %>%
+    filter(Mean == max(Mean)) %>%
+    select(Condition, Mean)
+  
+  min_condition <- summary_stats %>%
+    filter(Mean == min(Mean)) %>%
+    select(Condition, Mean)
+  
+  print(paste("Condition with maximum mean value:", max_condition$Condition, "Mean:", max_condition$Mean))
+  print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
 
-panda_Anthropomorphism <- rowMeans(data[, c("panda[Anthro1]", 
-                                            "panda[Anthro2]",
-                                            "panda[Anthro3]]",
-                                            "panda[Anthro4]", 
-                                            "panda[Anthro5]")], na.rm = TRUE) / 5
+}
 
-hyperRealistic_Anthropomorphism <- rowMeans(data[, c("hyperRealistic[Anthro1]", 
-                                            "hyperRealistic[Anthro2]",
-                                            "hyperRealistic[Anthro3]]",
-                                            "hyperRealistic[Anthro4]", 
-                                            "hyperRealistic[Anthro5]")], na.rm = TRUE) / 5
+anova_anthro(data)
+
+# ----- anima anova -----
+columns <- data[, c("toonBlue[AnimaMean]", "toonBrown[AnimaMean]", "hyperRealistic[AnimaMean]",
+                    "realisticWeird[AnimaMean]", "panda[AnimaMean]")]
+shapiro_anima <- lapply(columns, shapiro.test)
+print(shapiro_anima)
+anova_anima <- function(data) {
+  data_selected <- data %>%
+    select(`toonBlue[AnimaMean]`, `toonBrown[AnimaMean]`, `hyperRealistic[AnimaMean]`,
+           `realisticWeird[AnimaMean]`, `panda[AnimaMean]`)
+  
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "AnimaMean")
+  
+  anova_result <- aov(AnimaMean ~ Condition, data = data_long)
+  # summary(anova_result)
+  
+  tukey_result <- TukeyHSD(anova_result)
+  # print(tukey_result)
+
+  summary_stats <- data_long %>%
+    group_by(Condition) %>%
+    summarize(Mean = mean(AnimaMean), SD = sd(AnimaMean))
+  
+  print(summary_stats)
+  
+  max_condition <- summary_stats %>%
+    filter(Mean == max(Mean)) %>%
+    select(Condition, Mean)
+  
+  min_condition <- summary_stats %>%
+    filter(Mean == min(Mean)) %>%
+    select(Condition, Mean)
+  
+  print(paste("Condition with maximum mean value:", max_condition$Condition, "Mean:", max_condition$Mean))
+  print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
+}
+
+anova_anima(data)
+
+# ----- likability anova -----
+columns <- data[, c("toonBlue[LikeMean]", "toonBrown[LikeMean]", "hyperRealistic[LikeMean]",
+                    "realisticWeird[LikeMean]", "panda[LikeMean]")]
+shapiro_like <- lapply(columns, shapiro.test)
+print(shapiro_like)
+
+anova_like <- function(data) {
+  data_selected <- data %>%
+    select(`toonBlue[LikeMean]`, `toonBrown[LikeMean]`, `hyperRealistic[LikeMean]`,
+           `realisticWeird[LikeMean]`, `panda[LikeMean]`)
+  
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "LikeMean")
+  
+  anova_result <- aov(LikeMean ~ Condition, data = data_long)
+  print(summary(anova_result))
+  
+  tukey_result <- TukeyHSD(anova_result)
+  # print(tukey_result)
+  
+  summary_stats <- data_long %>%
+    group_by(Condition) %>%
+    summarize(Mean = mean(LikeMean), SD = sd(LikeMean))
+  
+  print(summary_stats)
+  
+  like_max_condition <<- summary_stats %>%
+    filter(Mean == max(Mean)) %>%
+    select(Condition, Mean)
+  
+  like_min_condition <<- summary_stats %>%
+    filter(Mean == min(Mean)) %>%
+    select(Condition, Mean)
+  
+  print(paste("Condition with maximum mean value:", like_max_condition$Condition, "Mean:", max_condition$Mean))
+  print(paste("Condition with minimum mean value:", like_min_condition$Condition, "Mean:", min_condition$Mean))
+}
+
+anova_like(data)
+t.test(data$`toonBrown[LikeMean]`, data$`hyperRealistic[LikeMean]`)
+
+# ----- Intelligence anova -----
+columns <- data[, c("toonBlue[IntMean]", "toonBrown[IntMean]", "hyperRealistic[IntMean]",
+                    "realisticWeird[IntMean]", "panda[IntMean]")]
+shapiro_int <- lapply(columns, shapiro.test)
+print(shapiro_int)
+
+hist(data$`panda[IntMean]`)
+
+anova_int <- function(data) {
+  data_selected <- data %>%
+    select(`toonBlue[IntMean]`, `toonBrown[IntMean]`, `hyperRealistic[IntMean]`,
+           `realisticWeird[IntMean]`, `panda[IntMean]`)
+  
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "IntMean")
+  
+  anova_result <- aov(IntMean ~ Condition, data = data_long)
+  # summary(anova_result)
+  
+  tukey_result <- TukeyHSD(anova_result)
+  print(tukey_result)
+  
+  summary_stats <- data_long %>%
+    group_by(Condition) %>%
+    summarize(Mean = mean(IntMean), SD = sd(IntMean))
+  
+  print(summary_stats)
+  
+  max_condition <- summary_stats %>%
+    filter(Mean == max(Mean)) %>%
+    select(Condition, Mean)
+  
+  min_condition <- summary_stats %>%
+    filter(Mean == min(Mean)) %>%
+    select(Condition, Mean)
+  
+  print(paste("Condition with maximum mean value:", max_condition$Condition, "Mean:", max_condition$Mean))
+  print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
+}
+
+anova_int(data)
+t.test(data$`hyperRealistic[IntMean]`, data$`panda[IntMean]`)
+
+# ----- Safety anova -----
+columns <- data[, c("toonBlue[SafeMean]", "toonBrown[SafeMean]", "hyperRealistic[SafeMean]",
+                    "realisticWeird[SafeMean]", "panda[SafeMean]")]
+shapiro_safe <- lapply(columns, shapiro.test)
+print(shapiro_safe)
+
+anova_safe <- function(data) {
+  data_selected <- data %>%
+    select(`toonBlue[SafeMean]`, `toonBrown[SafeMean]`, `hyperRealistic[SafeMean]`,
+           `realisticWeird[SafeMean]`, `panda[SafeMean]`)
+  
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "SafeMean")
+  
+  anova_result <- aov(SafeMean ~ Condition, data = data_long)
+  summary(anova_result)
+  
+  tukey_result <- TukeyHSD(anova_result)
+  # print(tukey_result)
+  
+  summary_stats <- data_long %>%
+    group_by(Condition) %>%
+    summarize(Mean = mean(SafeMean), SD = sd(SafeMean))
+  
+  print(summary_stats)
+  
+  max_condition <- summary_stats %>%
+    filter(Mean == max(Mean)) %>%
+    select(Condition, Mean)
+  
+  min_condition <- summary_stats %>%
+    filter(Mean == min(Mean)) %>%
+    select(Condition, Mean)
+  
+  print(paste("Condition with maximum mean value:", max_condition$Condition, "Mean:", max_condition$Mean))
+  print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
+}
+
+anova_safe(data)
+
+anova_anthro(data)
+anova_anima(data)
+anova_like(data)
+anova_int(data)
+anova_safe(data)
+
 
 t_panda_toon <- t.test(toonBlue_Anthropomorphism, panda_Anthropomorphism, paired = FALSE)
 t_hyper_toon <- t.test(toonBlue_Anthropomorphism, hyperRealistic_Anthropomorphism, paired = FALSE)
