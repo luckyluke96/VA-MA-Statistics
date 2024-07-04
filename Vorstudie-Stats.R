@@ -2,12 +2,14 @@ install.packages("ggplot2")
 install.packages("readxl")
 install.packages("psych")
 install.packages("dplyr")
+install.packages("car")
 
 library("ggplot2") 
 library("readxl")
 library(psych)
 library(dplyr)
 library(tidyr)
+library(car)
 
 
 # Setup
@@ -84,7 +86,8 @@ return(data)
 }
 
 data <- clean_data(data)
-
+describe(data)
+print(mean(data$`G01Q07. Wie alt sind Sie?`))
 # function adds mean of 5 godspeed variables
 add_mean_columns <- function(data) {
   data <- data %>%
@@ -163,11 +166,15 @@ add_mean_columns <- function(data) {
 data <- add_mean_columns(data)
 
 # ---------------- statistical tests ----------------
+# ----- anthropomorphism anova ----
 # normality checks, shapiro: if p > 0.05, it is normally distributed
 columns <- data[, c("toonBlue[AnthroMean]", "toonBrown[AnthroMean]", "hyperRealistic[AnthroMean]",
-                    "realisticWeird[AnthroMean]", "panda[AnthroMean]", "Robot[AnimaMean]")]
+                    "realisticWeird[AnthroMean]", "panda[AnthroMean]", "Robot[AnthroMean]")]
 shapiro_anthro <- lapply(columns, shapiro.test)
+describe(columns)
 print(shapiro_anthro)
+# usually it violated the homogeneity of variances for the anthro condition -> conduct a kruskal wallis test
+hist(data$`Robot[AnthroMean]`) # anthro for robot is probably not normally distributed -> skewed towards low anthro values
 
 anova_anthro <- function(data){
   data_selected <- data %>%
@@ -180,8 +187,14 @@ anova_anthro <- function(data){
                  names_to = "Condition",
                  values_to = "AnthroMean")
   
+  levene_test <- leveneTest(AnthroMean ~ Condition, data = data_long)
+  print(levene_test)
+  
   anova_result <- aov(AnthroMean ~ Condition, data = data_long)
   summary(anova_result)
+  
+  kruskal_test <- kruskal.test(AnthroMean ~ Condition, data = data_long)
+  print(kruskal_test)
   
   summary_stats <- data_long %>%
     group_by(Condition) %>%
@@ -205,7 +218,55 @@ anova_anthro <- function(data){
 
 }
 
+anova_anthro_with_log_trans <- function(data){
+  data_selected <- data %>%
+    select(`toonBlue[AnthroMean]`, `toonBrown[AnthroMean]`, `hyperRealistic[AnthroMean]`,
+           `realisticWeird[AnthroMean]`, `panda[AnthroMean]`, `Robot[AnthroMean]`)
+  
+  data_log_transformed <- log(data_selected)
+  
+  data_long_log <- data_log_transformed %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "AnthroMean")
+  
+  # Conduct Levene's test for homogeneity of variances on log-transformed data
+  levene_test_log <- leveneTest(AnthroMean ~ Condition, data = data_long_log)
+  print(levene_test_log)
+  
+  # If Levene's test p-value > 0.05, proceed with ANOVA
+  if (levene_test_log$`Pr(>F)`[1] > 0.05) {
+    anova_result_log <- aov(AnthroMean ~ Condition, data = data_long_log)
+    print(summary(anova_result_log))
+    
+    # Conduct post-hoc test to find out which specific variables have significant differences
+    tukey_result_log <- TukeyHSD(anova_result_log)
+    print(tukey_result_log)
+    
+    # Check the mean values for each variable
+    mean_values_log <- data_long_log %>%
+      group_by(Condition) %>%
+      summarise(Mean = mean(AnthroMean, na.rm = TRUE))
+    
+    print(mean_values_log)
+  } else {
+    print("The data does not meet the assumption of homogeneity of variances for ANOVA after log transformation.")
+  }
+  
+  max_condition <- summary_stats %>%
+    filter(Mean == max(Mean)) %>%
+    select(Condition, Mean)
+  
+  min_condition <- summary_stats %>%
+    filter(Mean == min(Mean)) %>%
+    select(Condition, Mean)
+  
+  print(paste("Condition with maximum mean value:", max_condition$Condition, "Mean:", max_condition$Mean))
+  print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
+}
+
 anova_anthro(data)
+anova_anthro_with_log_trans(data)
 
 # ----- anima anova -----
 columns <- data[, c("toonBlue[AnimaMean]", "toonBrown[AnimaMean]", "hyperRealistic[AnimaMean]",
@@ -221,6 +282,9 @@ anova_anima <- function(data) {
     pivot_longer(cols = everything(),
                  names_to = "Condition",
                  values_to = "AnimaMean")
+  
+  levene_test <- leveneTest(AnimaMean ~ Condition, data = data_long)
+  print(levene_test)
   
   anova_result <- aov(AnimaMean ~ Condition, data = data_long)
   summary(anova_result)
@@ -296,6 +360,7 @@ columns <- data[, c("toonBlue[IntMean]", "toonBrown[IntMean]", "hyperRealistic[I
                     "realisticWeird[IntMean]", "panda[IntMean]", "Robot[IntMean]")]
 shapiro_int <- lapply(columns, shapiro.test)
 print(shapiro_int)
+describe(columns)
 
 hist(data$`Robot[IntMean]`)
 
@@ -308,6 +373,9 @@ anova_int <- function(data) {
     pivot_longer(cols = everything(),
                  names_to = "Condition",
                  values_to = "IntMean")
+  
+  levene_test <- leveneTest(IntMean ~ Condition, data = data_long)
+  print(levene_test)
   
   anova_result <- aov(IntMean ~ Condition, data = data_long)
   summary(anova_result)
