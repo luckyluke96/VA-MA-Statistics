@@ -3,6 +3,7 @@ install.packages("readxl")
 install.packages("psych")
 install.packages("dplyr")
 install.packages("car")
+install.packages("dunn.test")
 
 library("ggplot2") 
 library("readxl")
@@ -10,6 +11,7 @@ library(psych)
 library(dplyr)
 library(tidyr)
 library(car)
+library(dunn.test)
 
 
 # Setup
@@ -166,6 +168,7 @@ add_mean_columns <- function(data) {
 data <- add_mean_columns(data)
 
 # ---------------- statistical tests ----------------
+
 # ----- anthropomorphism anova ----
 # normality checks, shapiro: if p > 0.05, it is normally distributed
 columns <- data[, c("toonBlue[AnthroMean]", "toonBrown[AnthroMean]", "hyperRealistic[AnthroMean]",
@@ -189,6 +192,15 @@ anova_anthro <- function(data){
   
   levene_test <- leveneTest(AnthroMean ~ Condition, data = data_long)
   print(levene_test)
+  
+  res = levene_test$`Pr(>F)`[1]
+  
+  if (levene_test$`Pr(>F)`[1] > 0.05) {
+    print(paste("Varianz gleichverteilt: p = ", res))
+  } else {
+    print(paste("Varianz nicht gleichverteilt: p = ", res))
+  }
+  
   
   anova_result <- aov(AnthroMean ~ Condition, data = data_long)
   summary(anova_result)
@@ -234,6 +246,14 @@ anova_anthro_with_log_trans <- function(data){
   levene_test_log <- leveneTest(AnthroMean ~ Condition, data = data_long_log)
   print(levene_test_log)
   
+  res = levene_test$`Pr(>F)`[1]
+  
+  if (levene_test$`Pr(>F)`[1] > 0.05) {
+    print(paste("Varianz gleichverteilt: p = ", res))
+  } else {
+    print(paste("Varianz nicht gleichverteilt: p = ", res))
+  }
+  
   # If Levene's test p-value > 0.05, proceed with ANOVA
   if (levene_test_log$`Pr(>F)`[1] > 0.05) {
     anova_result_log <- aov(AnthroMean ~ Condition, data = data_long_log)
@@ -265,8 +285,31 @@ anova_anthro_with_log_trans <- function(data){
   print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
 }
 
+kruskal_wallis_anthro <- function(data) {
+  data_selected <- data %>%
+    select(`toonBlue[AnthroMean]`, `toonBrown[AnthroMean]`, `hyperRealistic[AnthroMean]`,
+           `realisticWeird[AnthroMean]`, `panda[AnthroMean]`, `Robot[AnthroMean]`)
+  
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "AnthroMean")
+  
+  kruskal_result <- kruskal.test(AnthroMean ~ Condition, data = data_long)
+  print(kruskal_result)
+  
+  if (kruskal_result$p.value < 0.05) {
+    # Dunn's test with Bonferroni correction
+    dunn_result <- dunn.test(data_long$AnthroMean, data$Condition, method = "bonferroni")
+    # print(dunn_result)
+    
+    group_means <- aggregate(AnthroMean ~ Condition, data = data_long, mean)
+    print(group_means)
+  }
+}
+
 anova_anthro(data)
-anova_anthro_with_log_trans(data)
+
 
 # ----- anima anova -----
 columns <- data[, c("toonBlue[AnimaMean]", "toonBrown[AnimaMean]", "hyperRealistic[AnimaMean]",
@@ -285,6 +328,14 @@ anova_anima <- function(data) {
   
   levene_test <- leveneTest(AnimaMean ~ Condition, data = data_long)
   print(levene_test)
+  
+  res = levene_test$`Pr(>F)`[1]
+  
+  if (levene_test$`Pr(>F)`[1] > 0.05) {
+    print(paste("Varianz gleichverteilt: p = ", res))
+  } else {
+    print(paste("Varianz nicht gleichverteilt: p = ", res))
+  }
   
   anova_result <- aov(AnimaMean ~ Condition, data = data_long)
   summary(anova_result)
@@ -330,6 +381,17 @@ anova_like <- function(data) {
   
   anova_result <- aov(LikeMean ~ Condition, data = data_long)
   print(summary(anova_result))
+  
+  levene_test <- leveneTest(LikeMean ~ Condition, data = data_long)
+  print(levene_test)
+  
+  res = levene_test$`Pr(>F)`[1]
+  
+  if (levene_test$`Pr(>F)`[1] > 0.05) {
+    print(paste("Varianz gleichverteilt: p = ", res))
+  } else {
+    print(paste("Varianz nicht gleichverteilt: p = ", res))
+  }
   
   tukey_result <- TukeyHSD(anova_result)
   print(tukey_result)
