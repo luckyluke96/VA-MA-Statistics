@@ -4,6 +4,7 @@ install.packages("psych")
 install.packages("dplyr")
 install.packages("car")
 install.packages("dunn.test")
+install.packages("reshape2")
 
 library("ggplot2") 
 library("readxl")
@@ -12,6 +13,7 @@ library(dplyr)
 library(tidyr)
 library(car)
 library(dunn.test)
+library(reshape2)
 
 
 # Setup
@@ -89,7 +91,11 @@ return(data)
 
 data <- clean_data(data)
 describe(data)
-print(mean(data$`G01Q07. Wie alt sind Sie?`))
+print(paste("Durchschnittsalter:", mean(data$`G01Q07. Wie alt sind Sie?`)))
+
+gender_counts <- table(data$`G06Q08. Welchem Geschlecht fühlen Sie sich zugehörig?`)
+print(gender_counts)
+
 # function adds mean of 5 godspeed variables
 add_mean_columns <- function(data) {
   data <- data %>%
@@ -299,16 +305,45 @@ kruskal_wallis_anthro <- function(data) {
   print(kruskal_result)
   
   if (kruskal_result$p.value < 0.05) {
-    # Dunn's test with Bonferroni correction
-    dunn_result <- dunn.test(data_long$AnthroMean, data$Condition, method = "bonferroni")
-    # print(dunn_result)
+    
+    dunn_result <- dunn.test(data_long$AnthroMean, data_long$Condition, method = "bonferroni")
+    
+    print(dunn_result)
     
     group_means <- aggregate(AnthroMean ~ Condition, data = data_long, mean)
     print(group_means)
   }
 }
 
+kruskal_wallis_anthro(data)
+
+# wilcox.test(data$`toonBlue[AnthroMean]`, data$`panda[AnthroMean]`)
+
 anova_anthro(data)
+
+create_boxplot <- function(columns, godspeed_var) {
+  # Calculate the means for each column
+  column_means <- colMeans(columns)
+  # Order the columns by their means
+  ordered_columns <- columns[, order(column_means)]
+  
+  # Convert the ordered columns to a data frame for easy manipulation
+  ordered_df <- as.data.frame(ordered_columns)
+  
+  # Rename the columns to remove special characters for easy plotting
+  colnames(ordered_df) <- c("Toon", "Toon Uncanny", "Realistic", "Realistic Uncanny", "Panda", "Robot")[order(column_means)]
+  
+  # Melt the data frame for ggplot
+  melted_df <- melt(ordered_df)
+  
+  # Create the boxplots
+  ggplot(melted_df, aes(x = variable, y = value)) + 
+    geom_boxplot() +
+    labs(x = "Condition", y = godspeed_var, title = paste("Boxplots of", godspeed_var)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+create_boxplot(columns, "Anthropomorphism")
 
 
 # ----- anima anova -----
@@ -361,7 +396,34 @@ anova_anima <- function(data) {
   print(paste("Condition with minimum mean value:", min_condition$Condition, "Mean:", min_condition$Mean))
 }
 
-anova_anima(data)
+kruskal_wallis_anima <- function(data) {
+  data_selected <- data %>%
+    select(`toonBlue[AnimaMean]`, `toonBrown[AnimaMean]`, `hyperRealistic[AnimaMean]`,
+           `realisticWeird[AnimaMean]`, `panda[AnimaMean]`, `Robot[AnimaMean]`)
+  
+  data_long <- data_selected %>%
+    pivot_longer(cols = everything(),
+                 names_to = "Condition",
+                 values_to = "AnimaMean")
+  
+  kruskal_result <- kruskal.test(AnimaMean ~ Condition, data = data_long)
+  print(kruskal_result)
+  
+  if (kruskal_result$p.value < 0.05) {
+    
+    dunn_result <- dunn.test(data_long$AnimaMean, data_long$Condition, method = "bonferroni")
+    
+    print(dunn_result)
+    
+    group_means <- aggregate(AnimaMean ~ Condition, data = data_long, mean)
+    print(group_means)
+  }
+}
+anova_anima(data) # varianz nicht gleichverteilt, levene's p = 0.0057
+kruskal_wallis_anima(data)
+
+create_boxplot(columns, "Anima")
+
 
 # ----- likability anova -----
 columns <- data[, c("toonBlue[LikeMean]", "toonBrown[LikeMean]", "hyperRealistic[LikeMean]",
@@ -415,7 +477,9 @@ anova_like <- function(data) {
 }
 
 anova_like(data)
-t.test(data$`toonBrown[LikeMean]`, data$`hyperRealistic[LikeMean]`)
+# t.test(data$`toonBrown[LikeMean]`, data$`hyperRealistic[LikeMean]`)
+
+create_boxplot(columns, "Likability")
 
 # ----- Intelligence anova -----
 columns <- data[, c("toonBlue[IntMean]", "toonBrown[IntMean]", "hyperRealistic[IntMean]",
@@ -439,8 +503,17 @@ anova_int <- function(data) {
   levene_test <- leveneTest(IntMean ~ Condition, data = data_long)
   print(levene_test)
   
+  res = levene_test$`Pr(>F)`[1]
+  
+  if (levene_test$`Pr(>F)`[1] > 0.05) {
+    print(paste("Varianz gleichverteilt: p = ", res))
+  } else {
+    print(paste("Varianz nicht gleichverteilt: p = ", res))
+  }
+  
   anova_result <- aov(IntMean ~ Condition, data = data_long)
-  summary(anova_result)
+  print(summary(anova_result))
+  print(anova_result)
   
   tukey_result <- TukeyHSD(anova_result)
   print(tukey_result)
@@ -464,7 +537,8 @@ anova_int <- function(data) {
 }
 
 anova_int(data)
-t.test(data$`hyperRealistic[IntMean]`, data$`toonBrown[IntMean]`)
+
+create_boxplot(columns, "Intelligence")
 
 
 
